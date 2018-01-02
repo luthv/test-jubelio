@@ -1,9 +1,6 @@
 const db = require('./db.js');
 var azure = require('azure-storage');
-
-module.exports = {
-	testUpload: testUpload,
-}
+const config = require('./config');
 
 function toArrayBuffer(buf) {
   var ab = new ArrayBuffer(buf.length);
@@ -14,17 +11,30 @@ function toArrayBuffer(buf) {
   return ab;
 }
 
-function testUpload(req, res, next) {
+function testUpload() {
 	// set parameter input for azure credentials
-	const azure_account = req.body.azure_account;
-	const azure_storage_access_key = req.body.azure_storage_access_key;
-	const azure_container = req.body.azure_container;
+	const azure_account = config.STORAGE_ACCOUNT;
+	const azure_storage_access_key = config.STORAGE_KEY;
+	const azure_container = config.CONTAINER;
 
 	var bs = azure.createBlobService(azure_account, azure_storage_access_key);
 	var data_logo = [];
 	var interval = 2 * 1000;
 	db.any('SELECT company_id, logo FROM tenant_company ORDER BY company_id DESC')
-		.then(function(data, done){
+		.then(function(data, done) {
+			// loop through all rows
+			// Promise.map is also an option here to control how many concurrent connections we want
+			// see http://bluebirdjs.com/docs/api/promise.map.html
+			data.forEach((row) => {
+				console.log(row);
+
+				// row.logo is a buffer containing byte array
+				// convert buffer to stream
+				// upload to azure storage using createBlockBlobFromStream
+				// save resulting url to logo_url
+			})
+			
+			return;
 			numCompletedCalls = 0;
 			for (var i = 0; i < data.length; i++) {
 				setTimeout( function (i) {
@@ -65,3 +75,6 @@ function testUpload(req, res, next) {
 			}
 		});
 }
+
+// call main function
+testUpload();
